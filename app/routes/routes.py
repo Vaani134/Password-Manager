@@ -8,9 +8,7 @@ import bcrypt
 
 auth = Blueprint('auth', __name__)
 
-# -------------------------
-# Login Route
-# -------------------------
+
 @auth.route("/", methods=["GET", "POST"])
 def login():
     form = LoginForm()
@@ -22,9 +20,7 @@ def login():
         flash("Invalid credentials", "danger")
     return render_template("login.html", form=form)
 
-# -------------------------
-# Registration Route
-# -------------------------
+
 @auth.route("/register", methods=["GET", "POST"])
 def register():
     form = RegisterForm()
@@ -42,32 +38,30 @@ def register():
         return redirect(url_for("auth.login"))
     return render_template("register.html", form=form)
 
-# -------------------------
-# Dashboard / Vault Route
-# -------------------------
+
 @auth.route("/dashboard", methods=["GET", "POST"])
 @login_required
 def dashboard():
     form = VaultForm()
     search = request.args.get('search')
 
-    # Filter items by user
+   
     items = VaultItem.query.filter_by(user_id=current_user.id)
 
-    # Apply search filter
+
     if search:
         items = items.filter(VaultItem.site.ilike(f'%{search}%'))
 
     items = items.all()
 
     if form.validate_on_submit():
-        # Generate encryption key
+       
         key = generate_key(current_user.email, form.master_password.data)
 
-        # Encrypt the password
+      
         encrypted_pw = encrypt_password(form.password.data, key)
 
-        # Save to database
+       
         item = VaultItem(
             site=form.site.data,
             username=form.username.data,
@@ -81,9 +75,7 @@ def dashboard():
 
     return render_template("dashboard.html", form=form, items=items)
 
-# -------------------------
-# Logout
-# -------------------------
+
 @auth.route("/logout")
 @login_required
 def logout():
