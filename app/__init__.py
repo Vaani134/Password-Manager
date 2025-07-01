@@ -31,7 +31,7 @@ def create_app():
         return User.query.get(int(user_id))
 
     
-    from app.routes.routes import auth
+    from app.routes.auth import auth
     app.register_blueprint(auth)
 
    
