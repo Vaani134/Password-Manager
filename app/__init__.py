@@ -1,5 +1,6 @@
 from flask import Flask,render_template
 from flask_sqlalchemy import SQLAlchemy
+from app.routes.auth import auth_bp
 from dotenv import load_dotenv
 import os
 
@@ -18,6 +19,8 @@ def create_app():
                 
     #intialize db with app
     db.init_app(app)
+
+    app.register_blueprint(auth_bp)
     
     #route for frontend connection
     @app.route('/')
