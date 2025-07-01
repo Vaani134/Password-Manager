@@ -1,34 +1,46 @@
-from flask import Flask,render_template
+from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
-from app.routes.auth import auth_bp
+from flask_login import LoginManager
 from dotenv import load_dotenv
 import os
 
-#initoalizing db
-db=SQLAlchemy()
+
+db = SQLAlchemy()
+login_manager = LoginManager()
 
 def create_app():
-    #load env vars
     load_dotenv()
 
     app = Flask(__name__)
-    
-    #configd
-    app.config['SQLALCHEMY_DATABASE_URI']=os.getenv("DATABASE_URL")
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
-                
-    #intialize db with app
-    db.init_app(app)
 
-    app.register_blueprint(auth_bp)
+   
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL", "sqlite:///../instance/password_manager.db")
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "dev-secret-key")
+
     
-    #route for frontend connection
+    db.init_app(app)
+    login_manager.init_app(app)
+    login_manager.login_view = 'auth.login'  
+
+   
+    from app.models import User
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+
+    
+    from app.routes.routes import auth
+    app.register_blueprint(auth)
+
+   
     @app.route('/')
     def index():
         return render_template('index.html')
-    
-    #create database tables
+
+ 
     with app.app_context():
         db.create_all()
-    
+
     return app
