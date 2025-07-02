@@ -29,3 +29,25 @@ def decrypt_data(key: bytes, b64_ciphertext: str) -> str:
     unpadder = padding.PKCS7(128).unpadder()
     plaintext = unpadder.update(padded_plaintext) + unpadder.finalize()
     return plaintext.decode('utf-8')
+
+
+from hashlib import pbkdf2_hmac
+
+def generate_salt() -> bytes:
+    """
+    Generates a secure 16-byte salt using os.urandom.
+    """
+    return os.urandom(16)
+
+def derive_key(password: str, salt: bytes, iterations: int = 100_000) -> bytes:
+    """
+    Derives a 32-byte (256-bit) key from the password and salt using PBKDF2-HMAC-SHA256.
+    """
+    key = pbkdf2_hmac(
+        hash_name='sha256',
+        password=password.encode(),
+        salt=salt,
+        iterations=iterations,
+        dklen=32  # 256-bit key
+    )
+    return key
