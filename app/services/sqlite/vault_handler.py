@@ -1,8 +1,8 @@
 import sqlite3
 import json
-from app.services.encryption import encrypt_data, decrypt_data
+from ..encryption import encrypt_data, decrypt_data
 
-DB_NAME = "password_manager.db"
+DB_NAME = "instance/password_manager.db"
 
 def init_vault_table():
     with sqlite3.connect(DB_NAME) as conn:

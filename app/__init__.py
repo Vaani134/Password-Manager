@@ -31,8 +31,16 @@ def create_app():
         return User.query.get(int(user_id))
 
     
-    from app.routes.auth import auth
-    app.register_blueprint(auth)
+    from app.routes.auth import auth_bp
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+
+    # Register vault blueprint
+    from app.routes.vault_routes import vault_bp
+    app.register_blueprint(vault_bp, url_prefix='/api/vault')
+
+    # Register passwords blueprint
+    # from app.routes.passwords import passwords_bp
+    # app.register_blueprint(passwords_bp, url_prefix='/api/passwords')
 
    
     @app.route('/')

@@ -1,8 +1,8 @@
 import sqlite3
-from app.services.encryption import generate_salt, derive_key
+from ..encryption import generate_salt, derive_key
 from typing import Optional
 
-DB_NAME = "password_manager.db"
+DB_NAME = "instance/password_manager.db"
 
 def init_user_table():
     with sqlite3.connect(DB_NAME) as conn:
