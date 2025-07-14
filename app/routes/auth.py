@@ -15,7 +15,9 @@ auth = Blueprint('auth', __name__)
 @auth.before_app_request
 def make_session_permanent():
     session.permanent = True
+    session.modified = True  # ⏰ Resets timeout on user activity
     auth.current_app.permanent_session_lifetime = timedelta(minutes=10)
+
 
 # -------------------------
 # LOGIN ROUTE
@@ -27,10 +29,11 @@ def login():
         user = User.query.filter_by(email=form.email.data).first()
         if user and check_password(form.password.data, user.password_hash):
             login_user(user)
-            session.permanent = True  # activate session timeout
+            session.permanent = True
             return redirect(url_for('auth.dashboard'))
         flash("Invalid credentials", "danger")
     return render_template("login.html", form=form)
+
 
 # -------------------------
 # REGISTER ROUTE
@@ -52,6 +55,7 @@ def register():
         return redirect(url_for("auth.login"))
     return render_template("register.html", form=form)
 
+
 # -------------------------
 # DASHBOARD (CREATE / READ)
 # -------------------------
@@ -59,7 +63,7 @@ def register():
 @login_required
 def dashboard():
     form = VaultForm()
-    search = request.args.get('search')
+    search = request.args.get('search', '').strip()
 
     # Filter items by current user
     items = VaultItem.query.filter_by(user_id=current_user.id)
@@ -85,6 +89,7 @@ def dashboard():
 
     return render_template("dashboard.html", form=form, items=items)
 
+
 # -------------------------
 # EDIT VAULT ENTRY
 # -------------------------
@@ -93,7 +98,7 @@ def dashboard():
 def edit_vault_item(id):
     item = VaultItem.query.get_or_404(id)
     if item.user_id != current_user.id:
-        flash("Unauthorized access", "danger")
+        flash("Unauthorized action: You can't modify this entry.", "danger")
         return redirect(url_for("auth.dashboard"))
 
     form = VaultForm(obj=item)
@@ -110,6 +115,7 @@ def edit_vault_item(id):
 
     return render_template("edit_vault.html", form=form, item=item)
 
+
 # -------------------------
 # DELETE VAULT ENTRY
 # -------------------------
@@ -118,13 +124,14 @@ def edit_vault_item(id):
 def delete_vault_item(id):
     item = VaultItem.query.get_or_404(id)
     if item.user_id != current_user.id:
-        flash("Unauthorized", "danger")
+        flash("Unauthorized action: You can't delete this entry.", "danger")
         return redirect(url_for("auth.dashboard"))
 
     db.session.delete(item)
     db.session.commit()
     flash("Item deleted successfully", "info")
     return redirect(url_for("auth.dashboard"))
+
 
 # -------------------------
 # LOGOUT
@@ -133,5 +140,5 @@ def delete_vault_item(id):
 @login_required
 def logout():
     logout_user()
-    flash("Logged out successfully", "info")
+    flash("Logged out successfully or session expired.", "info")
     return redirect(url_for("auth.login"))
