@@ -1,1 +1,161 @@
-/* css file  */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #181818;
+    font-family: 'Segoe UI', sans-serif;
+    color: #ffffff;
+}
+
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.auth-box {
+    background-color: #0e1124;
+    padding: 40px;
+    border-radius: 15px;
+    width: 350px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+}
+
+.auth-box h2 {
+    font-size: 28px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.subtitle {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #bbbbbb;
+}
+
+.auth-box label {
+    font-size: 14px;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.auth-box input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    background-color: #2a2a2a;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+}
+
+.auth-box input::placeholder {
+    color: #999;
+}
+
+.primary-btn {
+    background-color: #938fff;
+    border: none;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    width: 100%;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+.primary-btn:hover {
+    background-color: #7b75e5;
+}
+
+.switch-text {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+}
+
+
+.forgot-row {
+    text-align: right;
+    margin-top: -15px;
+    margin-bottom: 20px;
+}
+
+.forgot-row a {
+    font-size: 13px;
+    color: #ccc;
+    text-decoration: none;
+}
+
+.forgot-row a:hover {
+    color: #aaa;
+    text-decoration: underline;
+}
+
+.dashboard-container {
+    padding: 40px;
+    max-width: 1000px;
+    margin: 0 auto;
+    color: #fff;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.dashboard-header h1 {
+    font-size: 32px;
+}
+
+.search-form input {
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: none;
+    background-color: #2a2a2a;
+    color: white;
+    width: 250px;
+}
+
+.vault-section {
+    background-color: #0e1124;
+    padding: 30px;
+    border-radius: 15px;
+}
+
+.vault-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #ddd;
+}
+
+.vault-table th,
+.vault-table td {
+    text-align: left;
+    padding: 12px;
+    border-bottom: 1px solid #444;
+}
+
+.view-btn,
+.delete-btn {
+    padding: 6px 12px;
+    margin-right: 5px;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.view-btn {
+    background-color: #6c63ff;
+    color: white;
+}
+
+.delete-btn {
+    background-color: #ff4d4f;
+    color: white;
+}

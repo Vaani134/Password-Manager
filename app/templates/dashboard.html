@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="dashboard-container">
+    <header class="dashboard-header">
+        <h1>Password Vault</h1>
+        <form class="search-form">
+            <input type="text" placeholder="Search passwords...">
+        </form>
+    </header>
+
+    <!-- Add Password Form -->
+    <form method="POST" action="/auth/add-password" class="add-password-form">
+        <input type="text" name="website" placeholder="Website Name" required>
+        <input type="url" name="url" placeholder="Website URL" required>
+        <input type="text" name="username" placeholder="Username/Email" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <textarea name="notes" placeholder="Notes (optional)"></textarea>
+        <input type="password" name="master_password" placeholder="Enter Master Password" required>
+        <button type="submit">Add Password</button>
+    </form>
+
+    <!-- Vault Table -->
+    <section class="vault-section">
+        <table class="vault-table">
+            <thead>
+                <tr>
+                    <th>Website</th>
+                    <th>Username</th>
+                    <th>Password</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pwd in passwords %}
+                <tr>
+                    <td>{{ pwd.website_name }}</td>
+                    <td>{{ pwd.username }}</td>
+                    <td>••••••••</td>
+                    <td>
+                        <form method="POST" action="/auth/view-password" style="display:inline;">
+                            <input type="hidden" name="entry_id" value="{{ pwd.id }}">
+                            <input type="password" name="master_password" placeholder="Master Password" required>
+                            <button type="submit">View</button>
+                        </form>
+                        <form method="POST" action="/auth/delete-password" style="display:inline;">
+                            <input type="hidden" name="entry_id" value="{{ pwd.id }}">
+                            <button class="delete-btn" type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+</div>
+{% endblock %}

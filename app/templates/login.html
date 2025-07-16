@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="auth-container">
+    <div class="auth-box">
+        <h2>Log In!</h2>
+        <p class="subtitle">Hi! Welcome Back, we missed you</p>
+        <form method="POST" action="{{ url_for('auth.signin') }}">
+            <label>Email</label>
+            <input type="email" name="email" placeholder="Email" required>
+
+            <label>Password</label>
+            <input type="password" name="password" placeholder="Password" required>
+
+            <div class="forgot-row">
+                <a href="#">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="primary-btn">Log In</button>
+        </form>
+        <p class="switch-text">Don't have an account? <a href="{{ url_for('auth.signup') }}">Sign Up</a></p>
+    </div>
+</div>
+{% endblock %}
