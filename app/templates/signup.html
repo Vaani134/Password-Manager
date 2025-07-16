@@ -1,22 +1,67 @@
-{% extends 'base.html' %}
-{% block content %}
-<div class="auth-container">
-    <div class="auth-box">
-        <h2>Create Account</h2>
-        <p class="subtitle">Fill your information below</p>
-        <form method="POST" action="{{ url_for('auth.signup') }}">
-            <label>Username</label>
-            <input type="text" name="username" placeholder="Username" required>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - Sign Up</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-            <label>Email</label>
-            <input type="email" name="email" placeholder="Email" required>
-
-            <label>Password</label>
-            <input type="password" name="password" placeholder="Password" required>
-
-            <button type="submit" class="primary-btn">Sign Up</button>
-        </form>
-        <p class="switch-text">Already have an account? <a href="{{ url_for('auth.signin') }}">Log In</a></p>
+</head>
+<body>
+    <div class="container">
+        <div class="auth-container">
+            <h1>Create Account</h1>
+            <p>Fill your information below</p>
+            
+            <form id="signupForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="password-input">
+                        <input type="password" id="password" name="password" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('password')">👁️</button>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Sign Up</button>
+            </form>
+            
+            <div class="auth-links">
+                <span>Already have an account? </span>
+                <a href="login.html">Log In</a>
+            </div>
+        </div>
     </div>
-</div>
-{% endblock %}
+
+    <script>
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const toggle = field.nextElementSibling;
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                toggle.textContent = '🙈';
+            } else {
+                field.type = 'password';
+                toggle.textContent = '👁️';
+            }
+        }
+
+        document.getElementById('signupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Add your signup logic here
+            alert('Account created successfully!');
+            window.location.href = 'dashboard.html';
+        });
+    </script>
+</body>
+</html>

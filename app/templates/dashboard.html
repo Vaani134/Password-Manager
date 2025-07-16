@@ -1,56 +1,95 @@
-{% extends 'base.html' %}
-{% block content %}
-<div class="dashboard-container">
-    <header class="dashboard-header">
-        <h1>Password Vault</h1>
-        <form class="search-form">
-            <input type="text" placeholder="Search passwords...">
-        </form>
-    </header>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Welcome Back</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-    <!-- Add Password Form -->
-    <form method="POST" action="/auth/add-password" class="add-password-form">
-        <input type="text" name="website" placeholder="Website Name" required>
-        <input type="url" name="url" placeholder="Website URL" required>
-        <input type="text" name="username" placeholder="Username/Email" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <textarea name="notes" placeholder="Notes (optional)"></textarea>
-        <input type="password" name="master_password" placeholder="Enter Master Password" required>
-        <button type="submit">Add Password</button>
-    </form>
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-container">
+            <header class="dashboard-header">
+                <div class="user-info">
+                    <div class="user-avatar">👤</div>
+                    <div class="user-details">
+                        <h3>Welcome Back!</h3>
+                        <p>[UserName]</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn" title="Notifications">🔔</button>
+                    <button class="icon-btn" title="Settings">⚙️</button>
+                    <button class="icon-btn" onclick="window.location.href='profile.html'" title="Profile">👤</button>
+                </div>
+            </header>
 
-    <!-- Vault Table -->
-    <section class="vault-section">
-        <table class="vault-table">
-            <thead>
-                <tr>
-                    <th>Website</th>
-                    <th>Username</th>
-                    <th>Password</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for pwd in passwords %}
-                <tr>
-                    <td>{{ pwd.website_name }}</td>
-                    <td>{{ pwd.username }}</td>
-                    <td>••••••••</td>
-                    <td>
-                        <form method="POST" action="/auth/view-password" style="display:inline;">
-                            <input type="hidden" name="entry_id" value="{{ pwd.id }}">
-                            <input type="password" name="master_password" placeholder="Master Password" required>
-                            <button type="submit">View</button>
-                        </form>
-                        <form method="POST" action="/auth/delete-password" style="display:inline;">
-                            <input type="hidden" name="entry_id" value="{{ pwd.id }}">
-                            <button class="delete-btn" type="submit">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </section>
-</div>
-{% endblock %}
+            <div class="search-bar">
+                <input type="text" placeholder="Search">
+            </div>
+
+            <div class="category-section">
+                <h4>Category</h4>
+                <div class="category-grid">
+                    <div class="category-item">
+                        <span class="icon">🏠</span>
+                        <h5>Home</h5>
+                        <p>Main dashboard</p>
+                    </div>
+                    <div class="category-item">
+                        <span class="icon">🌐</span>
+                        <h5>Browse</h5>
+                        <p>Explore content</p>
+                    </div>
+                    <div class="category-item">
+                        <span class="icon">💳</span>
+                        <h5>Card</h5>
+                        <p>Payment methods</p>
+                    </div>
+                    <div class="category-item">
+                        <span class="icon">📱</span>
+                        <h5>Apps</h5>
+                        <p>Application center</p>
+                    </div>
+                    <div class="category-item">
+                        <span class="icon">⋯</span>
+                        <h5>More</h5>
+                        <p>Additional options</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="recent-section">
+                <h4>Recent Used</h4>
+                <p style="color: rgba(255, 255, 255, 0.7); margin-top: 10px;">No recent items</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add search functionality
+        document.querySelector('.search-bar input').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            const items = document.querySelectorAll('.category-item');
+            
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(query)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = query === '' ? 'block' : 'none';
+                }
+            });
+        });
+
+        // Add click handlers for category items
+        document.querySelectorAll('.category-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const category = this.querySelector('h5').textContent;
+                alert(`Opening ${category} section`);
+            });
+        });
+    </script>
+</body>
+</html>

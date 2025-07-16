@@ -1,23 +1,65 @@
-{% extends 'base.html' %}
-{% block content %}
-<div class="auth-container">
-    <div class="auth-box">
-        <h2>Log In!</h2>
-        <p class="subtitle">Hi! Welcome Back, we missed you</p>
-        <form method="POST" action="{{ url_for('auth.signin') }}">
-            <label>Email</label>
-            <input type="email" name="email" placeholder="Email" required>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log In - Welcome Back</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-            <label>Password</label>
-            <input type="password" name="password" placeholder="Password" required>
-
-            <div class="forgot-row">
-                <a href="#">Forgot password?</a>
+</head>
+<body>
+    <div class="container">
+        <div class="auth-container">
+            <h1>Log In!</h1>
+            <p>Hi! Welcome Back, we missed you</p>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="password-input">
+                        <input type="password" id="password" name="password" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('password')">👁️</button>
+                    </div>
+                    <div class="forgot-password">
+                        <a href="forget_password.html">Forgot password?</a>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Log In</button>
+            </form>
+            
+            <div class="auth-links">
+                <span>Don't have an account? </span>
+                <a href="signup.html">Sign Up</a>
             </div>
-
-            <button type="submit" class="primary-btn">Log In</button>
-        </form>
-        <p class="switch-text">Don't have an account? <a href="{{ url_for('auth.signup') }}">Sign Up</a></p>
+        </div>
     </div>
-</div>
-{% endblock %}
+
+    <script>
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const toggle = field.nextElementSibling;
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                toggle.textContent = '🙈';
+            } else {
+                field.type = 'password';
+                toggle.textContent = '👁️';
+            }
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Add your login logic here
+            alert('Login successful!');
+            window.location.href = 'dashboard.html';
+        });
+    </script>
+</body>
+</html>

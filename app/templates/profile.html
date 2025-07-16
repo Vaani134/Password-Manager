@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - User Settings</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+<body>
+    <div class="container">
+        <div class="profile-container">
+            <header class="profile-header">
+                <div class="profile-info">
+                    <div class="profile-avatar">👤</div>
+                    <div class="profile-details">
+                        <h2>Welcome Back!</h2>
+                        <p>[UserName]</p>
+                    </div>
+                </div>
+                <button class="btn-edit">Edit Profile</button>
+            </header>
+
+            <div class="profile-content">
+                <div class="profile-menu">
+                    <a href="#" class="profile-menu-item">
+                        <span class="icon">⭐</span>
+                        <span>Favorites</span>
+                    </a>
+                    <a href="#" class="profile-menu-item">
+                        <span class="icon">📥</span>
+                        <span>Downloads</span>
+                    </a>
+                    <a href="#" class="profile-menu-item">
+                        <span class="icon">📍</span>
+                        <span>Location</span>
+                    </a>
+                    <a href="#" class="profile-menu-item">
+                        <span class="icon">🌐</span>
+                        <span>Language</span>
+                    </a>
+                    <a href="#" class="profile-menu-item">
+                        <span class="icon">🕐</span>
+                        <span>History</span>
+                    </a>
+                    <a href="index.html" class="profile-menu-item logout">
+                        <span class="icon">🚪</span>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add click handlers for profile menu items
+        document.querySelectorAll('.profile-menu-item:not(.logout)').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const action = this.querySelector('span:last-child').textContent;
+                alert(`Opening ${action} settings`);
+            });
+        });
+
+        // Edit profile button
+        document.querySelector('.btn-edit').addEventListener('click', function() {
+            alert('Edit profile functionality would be implemented here');
+        });
+
+        // Logout confirmation
+        document.querySelector('.logout').addEventListener('click', function(e) {
+            const confirmed = confirm('Are you sure you want to logout?');
+            if (!confirmed) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

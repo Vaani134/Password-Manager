@@ -12,15 +12,14 @@ def signup():
 def signin():
     return jsonify({'message': 'signin endpoint working'}), 200
 """
-from flask import Blueprint, request, render_template, redirect, url_for, flash
-from flask_login import login_user, logout_user, login_required
+from flask import Blueprint, request, render_template, redirect, session, url_for, flash
+from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from app.models import User
+from app.models import User, User_passwords
 from app import db
-from flask import request, redirect, url_for, flash
-from app.models import SavedPassword  # ⬅️ assuming this model exists
-from app import db
-from flask_login import current_user
+ 
+
+
 
 auth = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -75,13 +74,13 @@ def logout():
 
 
 @auth.route('/add-password', methods=['POST'])
-@login_required
+#@login_required
 def add_password():
     website = request.form['website']
     username = request.form['username']
     password = request.form['password']
 
-    new_entry = SavedPassword(
+    new_entry = User_passwords(
         user_id=current_user.id,
         website=website,
         username=username,
@@ -91,3 +90,23 @@ def add_password():
     db.session.commit()
     flash('Password added successfully!')
     return redirect(url_for('auth.dashboard'))
+
+
+
+@auth.route('/profile')
+#@login_required
+def profile():
+    return render_template('profile.html', user=current_user)
+
+
+
+@auth.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        # Implement email check / OTP / reset logic
+        flash('Password reset instructions sent to your email (if registered).', 'info')
+        #return redirect(url_for('auth.signin'))
+        return redirect(url_for('auth.forgot_password'))
+
+    return render_template('forgot_password.html') 
