@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Profile - Password Manager</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <main class="center-profile">
+        <h1><span class="icon-profile"></span> Edit Profile</h1>
+        <form method="post" action="/profile/edit" enctype="multipart/form-data" class="profile-edit-form">
+            <div class="profile-photo-section">
+                <label for="photo">Profile Photo:</label><br>
+                <input type="file" id="photo" name="photo" accept="image/*">
+                {% if photo_url %}
+                    <div class="profile-photo-preview">
+                        <img src="{{ photo_url }}" alt="Profile Photo" style="max-width:120px;max-height:120px;border-radius:50%;margin-top:10px;">
+                    </div>
+                {% endif %}
+            </div>
+            <div class="profile-info-section">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" value="{{ name }}" required>
+            </div>
+            <div class="profile-password-section">
+                <label for="current_password">Current Password:</label>
+                <input type="password" id="current_password" name="current_password" required>
+                <label for="new_password">New Password:</label>
+                <input type="password" id="new_password" name="new_password">
+                <label for="confirm_password">Confirm New Password:</label>
+                <input type="password" id="confirm_password" name="confirm_password">
+            </div>
+            <button type="submit" class="purple-btn">Save Changes</button>
+            <a href="/profile" class="purple-btn small-btn">Cancel</a>
+        </form>
+    </main>
+</body>
+</html> 
