@@ -5,3 +5,6 @@ Flask-SQLAlchemy~=3.1
 Flask-Login~=0.6
 requests~=2.31
 bcrypt~=4.2
+# Additional dependencies found in codebase
+werkzeug~=3.0
+# Standard library modules (do not need to be installed): os, sqlite3, base64, datetime, json, typing, hashlib
