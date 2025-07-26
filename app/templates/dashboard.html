@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="dashboard-profile-header">
+        {% if photo_url %}
+            <img src="{{ photo_url }}" alt="Profile Photo">
+        {% else %}
+            <span class="icon-profile"></span>
+        {% endif %}
+        <span style="font-weight:bold;font-size:1.1rem;">{{ name }}</span>
+        <a href="/profile" class="purple-btn small-btn" style="margin-left:16px;">My Profile</a>
+        <span class="notification-bell" style="margin-left:18px;position:relative;cursor:pointer;">
+            <span style="font-size:1.7rem;">🔔</span>
+        </span>
+    </div>
+    <div class="dashboard-container" style="display:flex;gap:32px;">
+        <!-- Sidebar for categories and tools -->
+        <nav style="min-width:220px;background:#23272a;padding:24px 0 24px 0;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.15);height:fit-content;">
+            <ul style="list-style:none;padding:0;margin:0;">
+                <li>
+                    <a href="#" class="sidebar-link" onclick="toggleVaultDropdown(event)">🗄️ Vault</a>
+                    <ul id="vault-dropdown" style="list-style:none;padding-left:18px;">
+                        <li><a href="#" class="sidebar-link vault-sub-link" onclick="showVaultSubcategory('passwords', event)">🔑 Passwords</a></li>
+                        <li><a href="#" class="sidebar-link vault-sub-link" onclick="showVaultSubcategory('notes', event)">📝 Secured Notes</a></li>
+                        <li><a href="#" class="sidebar-link vault-sub-link" onclick="showVaultSubcategory('creditcards', event)">💳 Credit Cards</a></li>
+                        <li><a href="#" class="sidebar-link vault-sub-link" onclick="showVaultSubcategory('shared', event)">🤝 Shared Items</a></li>
+                        <li><a href="#" class="sidebar-link vault-sub-link" onclick="showVaultSubcategory('trash', event)">🗑️ Trash</a></li>
+                    </ul>
+                </li>
+                <li><a href="#" class="sidebar-link" onclick="showCategory('folders')">📁 Folders</a></li>
+            </ul>
+            <hr style="margin:24px 0;border:0;border-top:1px solid #333;">
+            <div style="padding:0 16px;">
+                <h3 style="color:#bdbdbd;font-size:1.1em;margin-bottom:8px;">Tools</h3>
+                <ul style="list-style:none;padding:0;margin:0;">
+                    <li><a href="#" class="sidebar-link" onclick="showTool('generator')">🔒 Password Generator</a></li>
+                    <li><a href="#" class="sidebar-link" onclick="showTool('emailmask')">📧 Email Masking</a></li>
+                    <li><a href="#" class="sidebar-link" onclick="showTool('health')">💡 Password Health</a></li>
+                </ul>
+            </div>
+        </nav>
+        <!-- Main content area: remove vault tabs, show only the selected subcategory -->
+        <div style="flex:1;">
+            <div id="vault-passwords" class="vault-subcategory" style="display:none;">
+                <h1>Password Vault</h1>
+                <!-- Create Folder option in Passwords section -->
+                <form id="add-folder-form-passwords" style="display:flex;gap:8px;margin-bottom:16px;">
+                    <input type="text" id="new-folder-name-passwords" placeholder="Create new folder..." required style="flex:1;">
+                    <button class="purple-btn small-btn" type="submit">Create Folder</button>
+                </form>
+                <ul id="folders-ul-passwords" style="list-style:none;padding:0;margin-bottom:16px;"></ul>
+                <div id="passwords-by-folder"></div>
+            </div>
+            <div id="vault-notes" class="vault-subcategory" style="display:none;">
+                <h1>📝 Secured Notes</h1>
+                <form id="add-note-form" style="display:flex;gap:8px;margin-bottom:16px;">
+                    <input type="text" id="new-note-content" placeholder="New note..." required style="flex:1;">
+                    <button class="purple-btn small-btn" type="submit">Add Note</button>
+                </form>
+                <ul id="notes-ul" style="list-style:none;padding:0;"></ul>
+            </div>
+            <div id="vault-creditcards" class="vault-subcategory" style="display:none;">
+                <h1>💳 Credit Cards</h1>
+                <form id="add-card-form" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+                    <input type="text" id="card-number" placeholder="Card Number" required style="flex:2;min-width:120px;">
+                    <input type="text" id="card-holder" placeholder="Cardholder Name" required style="flex:2;min-width:120px;">
+                    <input type="text" id="card-expiry" placeholder="MM/YY" required style="flex:1;min-width:80px;">
+                    <input type="text" id="card-cvc" placeholder="CVC" required style="flex:1;min-width:60px;">
+                    <button class="purple-btn small-btn" type="submit">Add Card</button>
+                </form>
+                <ul id="cards-ul" style="list-style:none;padding:0;"></ul>
+            </div>
+            <div id="vault-shared" class="vault-subcategory" style="display:none;">
+                <h1>🤝 Shared Items</h1>
+                <form id="add-shared-form" style="display:flex;gap:8px;margin-bottom:16px;">
+                    <input type="text" id="new-shared-content" placeholder="Share with (email or username)..." required style="flex:2;">
+                    <input type="text" id="shared-item-desc" placeholder="Item description..." required style="flex:3;">
+                    <button class="purple-btn small-btn" type="submit">Share Item</button>
+                </form>
+                <ul id="shared-ul" style="list-style:none;padding:0;"></ul>
+            </div>
+            <div id="vault-trash" class="vault-subcategory" style="display:none;">
+                <h1>🗑️ Trash</h1>
+                <div style="margin-bottom:12px;">
+                    <button class="purple-btn small-btn" onclick="restoreAllTrash()">Restore All</button>
+                    <button class="purple-btn small-btn" onclick="emptyTrash()">Empty Trash</button>
+                </div>
+                <div id="trash-items"></div>
+            </div>
+            <div id="category-folders" class="dashboard-category" style="display:none;">
+                <h1>📁 Folders</h1>
+                <form id="add-folder-form" style="display:flex;gap:8px;margin-bottom:16px;">
+                    <input type="text" id="new-folder-name" placeholder="New folder name" required style="flex:1;">
+                    <button class="purple-btn small-btn" type="submit">Add Folder</button>
+                </form>
+                <div id="folder-actions-info" style="color:#bdbdbd;margin-bottom:16px;">(Click a folder to rename or delete. Drag passwords here to organize them. Feature demo only.)</div>
+                <ul id="folders-ul" style="list-style:none;padding:0;"></ul>
+            </div>
+            <div id="tool-generator" class="dashboard-tool" style="display:none;">
+                <h1>🔒 Password Generator</h1>
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
+                    <input type="number" id="gen-length" min="6" max="32" value="16" style="width:60px;">
+                    <label style="color:#bdbdbd;"><input type="checkbox" id="gen-symbols" checked> Symbols</label>
+                    <label style="color:#bdbdbd;"><input type="checkbox" id="gen-numbers" checked> Numbers</label>
+                    <label style="color:#bdbdbd;"><input type="checkbox" id="gen-upper" checked> Uppercase</label>
+                    <label style="color:#bdbdbd;"><input type="checkbox" id="gen-lower" checked> Lowercase</label>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
+                    <input type="text" id="generated-password-tool" readonly style="width:80%;font-size:1.1em;">
+                    <button class="purple-btn small-btn" onclick="generatePasswordTool()">Generate</button>
+                    <button class="purple-btn small-btn" onclick="copyPasswordTool()">Copy</button>
+                </div>
+                <div id="password-gen-info" style="color:#bdbdbd;"></div>
+            </div>
+            <div id="tool-emailmask" class="dashboard-tool" style="display:none;">
+                <h1>📧 Email Masking</h1>
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
+                    <input type="text" id="masked-email" readonly style="flex:2;font-size:1.1em;">
+                    <button class="purple-btn small-btn" onclick="generateMaskedEmail()">Generate</button>
+                    <button class="purple-btn small-btn" onclick="copyMaskedEmail()">Copy</button>
+                </div>
+                <div id="masked-email-info" style="color:#bdbdbd;">Use this email to protect your real address.</div>
+            </div>
+            <div id="tool-health" class="dashboard-tool" style="display:none;">
+                <h1>💡 Password Health</h1>
+                <button class="purple-btn small-btn" onclick="analyzePasswordHealth()">Analyze Passwords</button>
+                <div id="password-health-results" style="margin-top:16px;"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+    // Fetch and display passwords
+    async function loadPasswords() {
+        const res = await fetch('/api/passwords');
+        const data = await res.json();
+        const tbody = document.getElementById('vault-tbody');
+        tbody.innerHTML = '';
+        if (!data.passwords.length) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#bdbdbd;">No passwords yet.</td></tr>';
+            return;
+        }
+        for (const entry of data.passwords) {
+            const tr = document.createElement('tr');
+            // Extract domain for favicon
+            let domain = '';
+            try {
+                domain = new URL(entry.website).hostname;
+            } catch (e) {
+                // If not a full URL, try to use as domain
+                domain = entry.website.replace(/https?:\/\//, '').split('/')[0];
+            }
+            const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+            tr.innerHTML = `
+                <td><img src="${faviconUrl}" alt="logo" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;">${entry.website}</td>
+                <td>${entry.website_username}</td>
+                <td><input type="password" value="••••••••" readonly style="background:none;border:none;color:#bdbdbd;width:90px;"> <button class="purple-btn small-btn" onclick="showPassword(${entry.id})">Show</button></td>
+                <td>${entry.notes || ''}</td>
+                <td>
+                    <button class="purple-btn small-btn" onclick="openEditModal(${entry.id}, '${entry.website}', '${entry.website_username}', '${entry.notes || ''}')">Edit</button>
+                    <button class="icon-btn" title="Delete" onclick="deletePassword(${entry.id})">&times;</button>
+                    <button class="purple-btn small-btn" onclick="logDownload('${entry.website}')">Download</button>
+                    <button class="icon-btn" title="Toggle Favorite" onclick="toggleFavorite('${entry.website}')" id="fav-btn-${entry.id}">&#9734;</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        }
+    }
+    loadPasswords();
+
+    // Add Password Modal
+    document.getElementById('add-password-btn').onclick = function() {
+        openPasswordModal();
+    };
+    function openPasswordModal() {
+        document.getElementById('modal-title').innerText = 'Add Password';
+        document.getElementById('password-id').value = '';
+        document.getElementById('website').value = '';
+        document.getElementById('website-username').value = '';
+        document.getElementById('password').value = '';
+        document.getElementById('notes').value = '';
+        document.getElementById('password-modal').style.display = 'flex';
+    }
+    function openEditModal(id, website, username, notes) {
+        document.getElementById('modal-title').innerText = 'Edit Password';
+        document.getElementById('password-id').value = id;
+        document.getElementById('website').value = website;
+        document.getElementById('website-username').value = username;
+        document.getElementById('password').value = '';
+        document.getElementById('notes').value = notes;
+        document.getElementById('password-modal').style.display = 'flex';
+    }
+    document.getElementById('close-password-modal').onclick = function() {
+        document.getElementById('password-modal').style.display = 'none';
+    };
+    document.getElementById('password-form').onsubmit = async function(e) {
+        e.preventDefault();
+        const id = document.getElementById('password-id').value;
+        const website = document.getElementById('website').value;
+        const website_username = document.getElementById('website-username').value;
+        const password = document.getElementById('password').value;
+        const notes = document.getElementById('notes').value;
+        if (id) {
+            await fetch(`/api/passwords/${id}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({website, website_username, password, notes})
+            });
+        } else {
+            await fetch('/api/passwords', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({website, website_username, password, notes})
+            });
+        }
+        document.getElementById('password-modal').style.display = 'none';
+        loadPasswords();
+    };
+    async function deletePassword(id) {
+        if (!confirm('Delete this password?')) return;
+        await fetch(`/api/passwords/${id}`, {method: 'DELETE'});
+        loadPasswords();
+    }
+    // Show password (for demo, fetches encrypted password and alerts it; in production, decrypt securely)
+    async function showPassword(id) {
+        alert('For demo: password is encrypted and cannot be shown without master key.');
+    }
+    // Password Generator Modal logic
+    function generatePassword() {
+        const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
+        let pass = '';
+        for (let i = 0; i < 16; i++) {
+            pass += chars[Math.floor(Math.random() * chars.length)];
+        }
+        document.getElementById('generated-password').value = pass;
+    }
+    document.getElementById('open-generator').onclick = function() {
+        document.getElementById('generator-modal').style.display = 'block';
+    };
+    document.getElementById('close-generator').onclick = function() {
+        document.getElementById('generator-modal').style.display = 'none';
+    };
+
+    async function logDownload(filename) {
+        await fetch('/api/download', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({filename})
+        });
+        alert('Download logged! Check your profile page.');
+    }
+
+    async function toggleFavorite(item) {
+        // Check if already favorite by checking the button state or make an API call to check
+        // For demo, just toggle and call add/remove endpoints
+        const btn = document.querySelector(`[onclick*="toggleFavorite('${item}')"]`);
+        if (btn.classList.contains('favorited')) {
+            await fetch('/profile/favorite/remove', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `item=${encodeURIComponent(item)}`
+            });
+            btn.classList.remove('favorited');
+            btn.innerHTML = '&#9734;'; // empty star
+        } else {
+            await fetch('/profile/favorite/add', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `item=${encodeURIComponent(item)}`
+            });
+            btn.classList.add('favorited');
+            btn.innerHTML = '&#9733;'; // filled star
+        }
+        // Optionally, reload profile or update UI
+    }
+    // Sidebar navigation logic
+    function showCategory(cat) {
+        document.querySelectorAll('.dashboard-category').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.dashboard-tool').forEach(el => el.style.display = 'none');
+        if (cat === 'folders') document.getElementById('category-folders').style.display = '';
+    }
+    function showTool(tool) {
+        document.querySelectorAll('.dashboard-category').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.dashboard-tool').forEach(el => el.style.display = 'none');
+        document.getElementById('tool-' + tool).style.display = '';
+        document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.sidebar-link').forEach(el => {
+            if (el.textContent.toLowerCase().includes(tool)) el.classList.add('active');
+        });
+    }
+    // Enhanced Password Generator tool
+    function generatePasswordTool() {
+        let length = parseInt(document.getElementById('gen-length').value) || 16;
+        let chars = '';
+        if (document.getElementById('gen-lower').checked) chars += 'abcdefghijklmnopqrstuvwxyz';
+        if (document.getElementById('gen-upper').checked) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        if (document.getElementById('gen-numbers').checked) chars += '0123456789';
+        if (document.getElementById('gen-symbols').checked) chars += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+        if (!chars) chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let pass = '';
+        for (let i = 0; i < length; i++) {
+            pass += chars[Math.floor(Math.random() * chars.length)];
+        }
+        document.getElementById('generated-password-tool').value = pass;
+        document.getElementById('password-gen-info').textContent = '';
+    }
+    function copyPasswordTool() {
+        const input = document.getElementById('generated-password-tool');
+        input.select();
+        input.setSelectionRange(0, 99999);
+        document.execCommand('copy');
+        document.getElementById('password-gen-info').textContent = 'Copied!';
+        setTimeout(() => {
+            document.getElementById('password-gen-info').textContent = '';
+        }, 1500);
+    }
+    // Folder organization demo logic
+    // Folders API logic
+    async function fetchFolders() {
+        const res = await fetch('/api/folders');
+        const data = await res.json();
+        return data.folders || [];
+    }
+    async function renderFolders() {
+        const folders = await fetchFolders();
+        const ul = document.getElementById('folders-ul');
+        ul.innerHTML = '';
+        folders.forEach(folder => {
+            const li = document.createElement('li');
+            li.style.display = 'flex';
+            li.style.alignItems = 'center';
+            li.style.gap = '8px';
+            li.style.marginBottom = '6px';
+            li.innerHTML = `<span style='flex:1;cursor:pointer;' onclick='renameFolder(${folder.id}, "${folder.name}")'>📁 ${folder.name}</span> <button class='icon-btn' title='Delete' onclick='deleteFolder(${folder.id})'>&times;</button>`;
+            ul.appendChild(li);
+        });
+    }
+    async function addFolder(e) {
+        e.preventDefault();
+        const name = document.getElementById('new-folder-name').value.trim();
+        if (name) {
+            await fetch('/api/folders', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name})
+            });
+            renderFolders();
+            document.getElementById('new-folder-name').value = '';
+        }
+    }
+    async function deleteFolder(id) {
+        if (confirm('Delete this folder?')) {
+            await fetch(`/api/folders/${id}`, {method: 'DELETE'});
+            renderFolders();
+        }
+    }
+    async function renameFolder(id, oldName) {
+        const newName = prompt('Rename folder:', oldName);
+        if (newName && newName !== oldName) {
+            await fetch(`/api/folders/${id}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name: newName})
+            });
+            renderFolders();
+        }
+    }
+    document.getElementById('add-folder-form').onsubmit = addFolder;
+    renderFolders();
+
+    // Secured Notes demo logic
+    let notes = JSON.parse(localStorage.getItem('notes') || '[]');
+    function renderNotes() {
+        const ul = document.getElementById('notes-ul');
+        ul.innerHTML = '';
+        notes.forEach((note, idx) => {
+            const li = document.createElement('li');
+            li.style.display = 'flex';
+            li.style.alignItems = 'center';
+            li.style.gap = '8px';
+            li.style.marginBottom = '6px';
+            li.innerHTML = `<span style='flex:1;'>📝 ${note}</span> <button class='icon-btn' title='Delete' onclick='deleteNote(${idx})'>&times;</button>`;
+            ul.appendChild(li);
+        });
+    }
+    function addNote(e) {
+        e.preventDefault();
+        const content = document.getElementById('new-note-content').value.trim();
+        if (content) {
+            notes.push(content);
+            localStorage.setItem('notes', JSON.stringify(notes));
+            renderNotes();
+            document.getElementById('new-note-content').value = '';
+        }
+    }
+    function deleteNote(idx) {
+        if (confirm('Delete this note?')) {
+            notes.splice(idx, 1);
+            localStorage.setItem('notes', JSON.stringify(notes));
+            renderNotes();
+        }
+    }
+    document.getElementById('add-note-form').onsubmit = addNote;
+    renderNotes();
+
+    // Credit Cards demo logic
+    let cards = JSON.parse(localStorage.getItem('cards') || '[]');
+    function renderCards() {
+        const ul = document.getElementById('cards-ul');
+        ul.innerHTML = '';
+        cards.forEach((card, idx) => {
+            const li = document.createElement('li');
+            li.style.display = 'flex';
+            li.style.alignItems = 'center';
+            li.style.gap = '8px';
+            li.style.marginBottom = '6px';
+            li.innerHTML = `<span style='flex:2;'>💳 ${card.number.replace(/.(?=.{4})/g, '*')}</span> <span style='flex:2;'>${card.holder}</span> <span style='flex:1;'>${card.expiry}</span> <button class='icon-btn' title='Delete' onclick='deleteCard(${idx})'>&times;</button>`;
+            ul.appendChild(li);
+        });
+    }
+    function addCard(e) {
+        e.preventDefault();
+        const number = document.getElementById('card-number').value.trim();
+        const holder = document.getElementById('card-holder').value.trim();
+        const expiry = document.getElementById('card-expiry').value.trim();
+        const cvc = document.getElementById('card-cvc').value.trim();
+        if (number && holder && expiry && cvc) {
+            cards.push({number, holder, expiry, cvc});
+            localStorage.setItem('cards', JSON.stringify(cards));
+            renderCards();
+            document.getElementById('card-number').value = '';
+            document.getElementById('card-holder').value = '';
+            document.getElementById('card-expiry').value = '';
+            document.getElementById('card-cvc').value = '';
+        }
+    }
+    function deleteCard(idx) {
+        if (confirm('Delete this card?')) {
+            cards.splice(idx, 1);
+            localStorage.setItem('cards', JSON.stringify(cards));
+            renderCards();
+        }
+    }
+    document.getElementById('add-card-form').onsubmit = addCard;
+    renderCards();
+
+    // Folder creation logic for Passwords section (syncs with main folders)
+    function renderFoldersPasswords() {
+        const ul = document.getElementById('folders-ul-passwords');
+        ul.innerHTML = '';
+        folders.forEach((folder, idx) => {
+            const li = document.createElement('li');
+            li.style.display = 'flex';
+            li.style.alignItems = 'center';
+            li.style.gap = '8px';
+            li.style.marginBottom = '6px';
+            li.innerHTML = `<span style='flex:1;cursor:pointer;' onclick='renameFolder(${idx})'>📁 ${folder}</span> <button class='icon-btn' title='Delete' onclick='deleteFolder(${idx})'>&times;</button>`;
+            ul.appendChild(li);
+        });
+    }
+    function addFolderPasswords(e) {
+        e.preventDefault();
+        const name = document.getElementById('new-folder-name-passwords').value.trim();
+        if (name && !folders.includes(name)) {
+            folders.push(name);
+            localStorage.setItem('folders', JSON.stringify(folders));
+            renderFolders();
+            renderFoldersPasswords();
+            document.getElementById('new-folder-name-passwords').value = '';
+            showCategory('folders'); // Automatically switch to Folders menu
+        }
+    }
+    document.getElementById('add-folder-form-passwords').onsubmit = addFolderPasswords;
+    renderFoldersPasswords();
+
+    // Vault dropdown logic (fix for .open class and arrow rotation)
+    function toggleVaultDropdown(e) {
+        if (e) e.preventDefault();
+        const dropdown = document.getElementById('vault-dropdown');
+        const arrow = document.getElementById('vault-arrow');
+        if (!dropdown.classList.contains('open')) {
+            dropdown.classList.add('open');
+            arrow.style.transform = 'rotate(90deg)';
+        } else {
+            dropdown.classList.remove('open');
+            arrow.style.transform = 'rotate(0deg)';
+        }
+    }
+    // Trash UI logic
+    async function fetchTrashedPasswords() {
+        const res = await fetch('/api/passwords/trashed');
+        const data = await res.json();
+        return data.passwords || [];
+    }
+    async function renderTrashPasswords() {
+        const container = document.getElementById('trash-passwords');
+        container.innerHTML = '';
+        const passwords = await fetchTrashedPasswords();
+        if (!passwords.length) {
+            container.innerHTML = `<div style='color:#bdbdbd;padding:12px;'>No items in trash.</div>`;
+            return;
+        }
+        const table = document.createElement('table');
+        table.className = 'vault-table';
+        table.innerHTML = `<thead><tr><th>Website</th><th>Username</th><th>Password</th><th>Notes</th><th>Actions</th></tr></thead><tbody></tbody>`;
+        passwords.forEach(entry => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${entry.website}</td>
+                <td>${entry.website_username}</td>
+                <td><input type="password" value="••••••••" readonly style="background:none;border:none;color:#bdbdbd;width:90px;"></td>
+                <td>${entry.notes || ''}</td>
+                <td>
+                    <button class="purple-btn small-btn" onclick="restorePassword(${entry.id})">Restore</button>
+                    <button class="icon-btn" title="Delete" onclick="permanentlyDeletePassword(${entry.id})">&times;</button>
+                </td>
+            `;
+            table.querySelector('tbody').appendChild(tr);
+        });
+        container.appendChild(table);
+    }
+    async function movePasswordToTrash(id) {
+        if (confirm('Move this password to trash?')) {
+            await fetch(`/api/passwords/${id}/trash`, {method: 'PUT'});
+            renderPasswordsByFolder();
+            renderTrashPasswords();
+        }
+    }
+    async function restorePassword(id) {
+        await fetch(`/api/passwords/${id}/restore`, {method: 'PUT'});
+        renderPasswordsByFolder();
+        renderTrashPasswords();
+    }
+    async function permanentlyDeletePassword(id) {
+        if (confirm('Permanently delete this password?')) {
+            await fetch(`/api/passwords/${id}/delete`, {method: 'DELETE'});
+            renderTrashPasswords();
+        }
+    }
+    // Render trash passwords when Trash tab is shown
+    function showVaultSubcategory(sub, e) {
+        if (e) e.preventDefault();
+        document.querySelectorAll('.vault-subcategory').forEach(el => el.style.display = 'none');
+        document.getElementById('vault-' + sub).style.display = '';
+        document.querySelectorAll('.vault-sub-link').forEach(el => el.classList.remove('active'));
+        if (e && e.target) e.target.classList.add('active');
+        // Hide other dashboard categories/tools
+        document.querySelectorAll('.dashboard-category').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.dashboard-tool').forEach(el => el.style.display = 'none');
+        if (sub === 'trash') renderTrashPasswords();
+    }
+    // On page load, expand Vault and show Passwords by default
+    window.addEventListener('DOMContentLoaded', function() {
+        toggleVaultDropdown({preventDefault:()=>{}});
+        showVaultSubcategory('passwords');
+    });
+
+    // Shared Items demo logic
+    let sharedItems = JSON.parse(localStorage.getItem('sharedItems') || '[]');
+    function renderSharedItems() {
+        const ul = document.getElementById('shared-ul');
+        ul.innerHTML = '';
+        sharedItems.forEach((item, idx) => {
+            const li = document.createElement('li');
+            li.style.display = 'flex';
+            li.style.alignItems = 'center';
+            li.style.gap = '8px';
+            li.style.marginBottom = '6px';
+            li.innerHTML = `<span style='flex:2;'>${item.with}</span> <span style='flex:3;'>${item.desc}</span> <button class='icon-btn' title='Delete' onclick='deleteSharedItem(${idx})'>&times;</button>`;
+            ul.appendChild(li);
+        });
+    }
+    function addSharedItem(e) {
+        e.preventDefault();
+        const withWhom = document.getElementById('new-shared-content').value.trim();
+        const desc = document.getElementById('shared-item-desc').value.trim();
+        if (withWhom && desc) {
+            sharedItems.push({with: withWhom, desc});
+            localStorage.setItem('sharedItems', JSON.stringify(sharedItems));
+            renderSharedItems();
+            document.getElementById('new-shared-content').value = '';
+            document.getElementById('shared-item-desc').value = '';
+        }
+    }
+    function deleteSharedItem(idx) {
+        if (confirm('Delete this shared item?')) {
+            sharedItems.splice(idx, 1);
+            localStorage.setItem('sharedItems', JSON.stringify(sharedItems));
+            renderSharedItems();
+        }
+    }
+    document.getElementById('add-shared-form').onsubmit = addSharedItem;
+    renderSharedItems();
+
+    // Email Masking tool
+    function generateMaskedEmail() {
+        const user = 'user' + Math.floor(Math.random() * 10000);
+        const domain = 'maskmail.com';
+        document.getElementById('masked-email').value = `${user}@${domain}`;
+    }
+    function copyMaskedEmail() {
+        const input = document.getElementById('masked-email');
+        input.select();
+        input.setSelectionRange(0, 99999);
+        document.execCommand('copy');
+        document.getElementById('masked-email-info').textContent = 'Copied!';
+        setTimeout(() => {
+            document.getElementById('masked-email-info').textContent = 'Use this email to protect your real address.';
+        }, 1500);
+    }
+    // Password Health tool
+    function analyzePasswordHealth() {
+        const tbody = document.getElementById('vault-tbody');
+        if (!tbody) return;
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        let passwords = [];
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 3) {
+                const website = cells[0].innerText.trim();
+                const username = cells[1].innerText.trim();
+                // For demo, use the masked value as a placeholder
+                const password = cells[2].querySelector('input') ? cells[2].querySelector('input').value : '';
+                passwords.push({website, username, password});
+            }
+        });
+        // Analyze passwords
+        let weak = 0, reused = 0, total = passwords.length;
+        let seen = {};
+        let html = '<table class="vault-table"><thead><tr><th>Website</th><th>Username</th><th>Password</th><th>Status</th></tr></thead><tbody>';
+        passwords.forEach(pw => {
+            let status = [];
+            if (pw.password.length < 8) status.push('Too short');
+            if (!/[0-9]/.test(pw.password)) status.push('No number');
+            if (!/[A-Z]/.test(pw.password)) status.push('No uppercase');
+            if (!/[a-z]/.test(pw.password)) status.push('No lowercase');
+            if (!/[^A-Za-z0-9]/.test(pw.password)) status.push('No symbol');
+            if (seen[pw.password]) {
+                status.push('Reused');
+                reused++;
+            }
+            seen[pw.password] = true;
+            if (status.length) weak++;
+            html += `<tr><td>${pw.website}</td><td>${pw.username}</td><td>${pw.password}</td><td>${status.length ? status.join(', ') : 'Strong'}</td></tr>`;
+        });
+        html += '</tbody></table>';
+        html += `<div style='margin-top:12px;'><b>Total:</b> ${total}, <b>Weak:</b> ${weak}, <b>Reused:</b> ${reused}</div>`;
+        document.getElementById('password-health-results').innerHTML = html;
+    }
+    // Passwords grouped by folder UI
+    async function fetchGroupedPasswords() {
+        const res = await fetch('/api/passwords/grouped');
+        const data = await res.json();
+        return data.folders || [];
+    }
+    async function fetchFoldersForDropdown() {
+        const res = await fetch('/api/folders');
+        const data = await res.json();
+        return data.folders || [];
+    }
+    async function renderPasswordsByFolder() {
+        const container = document.getElementById('passwords-by-folder');
+        container.innerHTML = '';
+        const folders = await fetchGroupedPasswords();
+        const allFolders = await fetchFoldersForDropdown();
+        folders.forEach(folder => {
+            const section = document.createElement('section');
+            section.className = 'profile-card';
+            section.innerHTML = `<div class='card-header'>📁 ${folder.name}</div>`;
+            if (!folder.passwords.length) {
+                section.innerHTML += `<div style='color:#bdbdbd;padding:12px;'>No passwords in this folder.</div>`;
+            } else {
+                const table = document.createElement('table');
+                table.className = 'vault-table';
+                table.innerHTML = `<thead><tr><th>Website</th><th>Username</th><th>Password</th><th>Notes</th><th>Folder</th><th>Actions</th></tr></thead><tbody></tbody>`;
+                folder.passwords.forEach(entry => {
+                    const tr = document.createElement('tr');
+                    // Folder dropdown
+                    let folderOptions = `<option value=''>Uncategorized</option>`;
+                    allFolders.forEach(f => {
+                        folderOptions += `<option value='${f.id}' ${entry.folder_id === f.id ? 'selected' : ''}>${f.name}</option>`;
+                    });
+                    tr.innerHTML = `
+                        <td>${entry.website}</td>
+                        <td>${entry.website_username}</td>
+                        <td><input type="password" value="••••••••" readonly style="background:none;border:none;color:#bdbdbd;width:90px;"> <button class="purple-btn small-btn" onclick="showPassword(${entry.id})">Show</button></td>
+                        <td>${entry.notes || ''}</td>
+                        <td><select onchange="setPasswordFolder(${entry.id}, this.value)">${folderOptions}</select></td>
+                        <td>
+                            <button class="purple-btn small-btn" onclick="openEditModal(${entry.id}, '${entry.website}', '${entry.website_username}', '${entry.notes || ''}')">Edit</button>
+                            <button class="icon-btn" title="Delete" onclick="deletePassword(${entry.id})">&times;</button>
+                            <button class="purple-btn small-btn" onclick="logDownload('${entry.website}')">Download</button>
+                            <button class="icon-btn" title="Toggle Favorite" onclick="toggleFavorite('${entry.website}')" id="fav-btn-${entry.id}">&#9734;</button>
+                            <button class="purple-btn small-btn" onclick="movePasswordToTrash(${entry.id})">Move to Trash</button>
+                        </td>
+                    `;
+                    table.querySelector('tbody').appendChild(tr);
+                });
+                section.appendChild(table);
+            }
+            container.appendChild(section);
+        });
+    }
+    async function setPasswordFolder(passwordId, folderId) {
+        await fetch(`/api/passwords/${passwordId}/folder`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({folder_id: folderId || null})
+        });
+        renderPasswordsByFolder();
+    }
+    // On page load, render passwords grouped by folder
+    renderPasswordsByFolder();
+
+    // Trash support for notes and cards (localStorage demo)
+    function getTrashedNotes() {
+        return JSON.parse(localStorage.getItem('trashedNotes') || '[]');
+    }
+    function getTrashedCards() {
+        return JSON.parse(localStorage.getItem('trashedCards') || '[]');
+    }
+    function trashNote(idx) {
+        let notes = JSON.parse(localStorage.getItem('notes') || '[]');
+        let trashed = getTrashedNotes();
+        trashed.push(notes[idx]);
+        notes.splice(idx, 1);
+        localStorage.setItem('notes', JSON.stringify(notes));
+        localStorage.setItem('trashedNotes', JSON.stringify(trashed));
+        renderNotes();
+        renderTrashItems();
+    }
+    function trashCard(idx) {
+        let cards = JSON.parse(localStorage.getItem('cards') || '[]');
+        let trashed = getTrashedCards();
+        trashed.push(cards[idx]);
+        cards.splice(idx, 1);
+        localStorage.setItem('cards', JSON.stringify(cards));
+        localStorage.setItem('trashedCards', JSON.stringify(trashed));
+        renderCards();
+        renderTrashItems();
+    }
+    function restoreTrashedNote(idx) {
+        let notes = JSON.parse(localStorage.getItem('notes') || '[]');
+        let trashed = getTrashedNotes();
+        notes.push(trashed[idx]);
+        trashed.splice(idx, 1);
+        localStorage.setItem('notes', JSON.stringify(notes));
+        localStorage.setItem('trashedNotes', JSON.stringify(trashed));
+        renderNotes();
+        renderTrashItems();
+    }
+    function restoreTrashedCard(idx) {
+        let cards = JSON.parse(localStorage.getItem('cards') || '[]');
+        let trashed = getTrashedCards();
+        cards.push(trashed[idx]);
+        trashed.splice(idx, 1);
+        localStorage.setItem('cards', JSON.stringify(cards));
+        localStorage.setItem('trashedCards', JSON.stringify(trashed));
+        renderCards();
+        renderTrashItems();
+    }
+    function deleteTrashedNote(idx) {
+        let trashed = getTrashedNotes();
+        trashed.splice(idx, 1);
+        localStorage.setItem('trashedNotes', JSON.stringify(trashed));
+        renderTrashItems();
+    }
+    function deleteTrashedCard(idx) {
+        let trashed = getTrashedCards();
+        trashed.splice(idx, 1);
+        localStorage.setItem('trashedCards', JSON.stringify(trashed));
+        renderTrashItems();
+    }
+    function restoreAllTrash() {
+        if (!confirm('Restore all trashed items?')) return;
+        // Notes
+        let notes = JSON.parse(localStorage.getItem('notes') || '[]');
+        let trashedNotes = getTrashedNotes();
+        notes = notes.concat(trashedNotes);
+        localStorage.setItem('notes', JSON.stringify(notes));
+        localStorage.setItem('trashedNotes', '[]');
+        // Cards
+        let cards = JSON.parse(localStorage.getItem('cards') || '[]');
+        let trashedCards = getTrashedCards();
+        cards = cards.concat(trashedCards);
+        localStorage.setItem('cards', JSON.stringify(cards));
+        localStorage.setItem('trashedCards', '[]');
+        // Passwords (call backend for all trashed passwords)
+        fetch('/api/passwords/trashed').then(r=>r.json()).then(data=>{
+            (data.passwords||[]).forEach(pw=>restorePassword(pw.id));
+        });
+        renderNotes();
+        renderCards();
+        renderTrashItems();
+    }
+    function emptyTrash() {
+        if (!confirm('Permanently delete all trashed items?')) return;
+        // Notes
+        localStorage.setItem('trashedNotes', '[]');
+        // Cards
+        localStorage.setItem('trashedCards', '[]');
+        // Passwords (call backend for all trashed passwords)
+        fetch('/api/passwords/trashed').then(r=>r.json()).then(data=>{
+            (data.passwords||[]).forEach(pw=>permanentlyDeletePassword(pw.id));
+        });
+        renderTrashItems();
+    }
+    async function renderTrashItems() {
+        const container = document.getElementById('trash-items');
+        container.innerHTML = '';
+        // Passwords
+        const passwords = await fetchTrashedPasswords();
+        passwords.forEach(entry => {
+            const div = document.createElement('div');
+            div.className = 'profile-card';
+            div.innerHTML = `<div class='card-header'><span style='color:#f44336;'>🔑 Password</span> ${entry.website}</div>
+                <div style='padding:8px 0 0 0;'>
+                    <b>Username:</b> ${entry.website_username}<br>
+                    <b>Notes:</b> ${entry.notes || ''}
+                </div>
+                <div style='margin-top:8px;'>
+                    <button class="purple-btn small-btn" onclick="restorePassword(${entry.id})">Restore</button>
+                    <button class="icon-btn" title="Delete" onclick="permanentlyDeletePassword(${entry.id})">&times;</button>
+                </div>`;
+            container.appendChild(div);
+        });
+        // Notes
+        let trashedNotes = getTrashedNotes();
+        trashedNotes.forEach((note, idx) => {
+            const div = document.createElement('div');
+            div.className = 'profile-card';
+            div.innerHTML = `<div class='card-header'><span style='color:#ff9800;'>📝 Note</span></div>
+                <div style='padding:8px 0 0 0;'>${note}</div>
+                <div style='margin-top:8px;'>
+                    <button class="purple-btn small-btn" onclick="restoreTrashedNote(${idx})">Restore</button>
+                    <button class="icon-btn" title="Delete" onclick="deleteTrashedNote(${idx})">&times;</button>
+                </div>`;
+            container.appendChild(div);
+        });
+        // Cards
+        let trashedCards = getTrashedCards();
+        trashedCards.forEach((card, idx) => {
+            const div = document.createElement('div');
+            div.className = 'profile-card';
+            div.innerHTML = `<div class='card-header'><span style='color:#2196f3;'>💳 Card</span> ${card.number.replace(/.(?=.{4})/g, '*')}</div>
+                <div style='padding:8px 0 0 0;'>
+                    <b>Holder:</b> ${card.holder}<br>
+                    <b>Expiry:</b> ${card.expiry}
+                </div>
+                <div style='margin-top:8px;'>
+                    <button class="purple-btn small-btn" onclick="restoreTrashedCard(${idx})">Restore</button>
+                    <button class="icon-btn" title="Delete" onclick="deleteTrashedCard(${idx})">&times;</button>
+                </div>`;
+            container.appendChild(div);
+        });
+    }
+    // Add Move to Trash button for notes and cards
+    function renderNotes() {
+        const ul = document.getElementById('notes-ul');
+        ul.innerHTML = '';
+        let notes = JSON.parse(localStorage.getItem('notes') || '[]');
+        notes.forEach((note, idx) => {
+            const li = document.createElement('li');
+            li.style.display = 'flex';
+            li.style.alignItems = 'center';
+            li.style.gap = '8px';
+            li.style.marginBottom = '6px';
+            li.innerHTML = `<span style='flex:1;'>📝 ${note}</span> <button class='icon-btn' title='Delete' onclick='deleteNote(${idx})'>&times;</button> <button class='purple-btn small-btn' onclick='trashNote(${idx})'>Move to Trash</button>`;
+            ul.appendChild(li);
+        });
+    }
+    function renderCards() {
+        const ul = document.getElementById('cards-ul');
+        ul.innerHTML = '';
+        let cards = JSON.parse(localStorage.getItem('cards') || '[]');
+        cards.forEach((card, idx) => {
+            const li = document.createElement('li');
+            li.style.display = 'flex';
+            li.style.alignItems = 'center';
+            li.style.gap = '8px';
+            li.style.marginBottom = '6px';
+            li.innerHTML = `<span style='flex:2;'>💳 ${card.number.replace(/.(?=.{4})/g, '*')}</span> <span style='flex:2;'>${card.holder}</span> <span style='flex:1;'>${card.expiry}</span> <button class='icon-btn' title='Delete' onclick='deleteCard(${idx})'>&times;</button> <button class='purple-btn small-btn' onclick='trashCard(${idx})'>Move to Trash</button>`;
+            ul.appendChild(li);
+        });
+    }
+    // Enhance Trash UI on load
+    function showVaultSubcategory(sub, e) {
+        if (e) e.preventDefault();
+        document.querySelectorAll('.vault-subcategory').forEach(el => el.style.display = 'none');
+        document.getElementById('vault-' + sub).style.display = '';
+        document.querySelectorAll('.vault-sub-link').forEach(el => el.classList.remove('active'));
+        if (e && e.target) e.target.classList.add('active');
+        // Hide other dashboard categories/tools
+        document.querySelectorAll('.dashboard-category').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.dashboard-tool').forEach(el => el.style.display = 'none');
+        if (sub === 'trash') renderTrashItems();
+    }
+    </script>
+</body>
+</html> 

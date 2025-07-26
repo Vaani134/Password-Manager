@@ -1,0 +1,49 @@
+# Python cache and artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pkl
+*.log
+
+# Virtual environment
+.venv/
+env/
+ENV/
+venv/
+pip-selfcheck.json
+
+# # Flask & dotenv config
+# instance/
+# .env
+# *.env
+# .env.*
+
+
+# Alembic/Flask-Migrate
+migrations/versions/
+
+# VS Code settings
+.vscode/
+.idea/
+
+# macOS, Linux, Windows system files
+.DS_Store
+Thumbs.db
+
+# Coverage reports / testing
+htmlcov/
+.coverage
+.tox/
+.cache/
+pytest_cache/
+coverage.xml
+
+# Log files
+*.log
+
+# Reports or generated docs
+docs/_build/
+dist/
+build/
+
