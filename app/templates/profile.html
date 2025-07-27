@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Profile - Password Manager</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <main class="center-profile" style="position:relative;">
+        <!-- Left Arrow for Previous Page -->
+        <a href="/dashboard" class="arrow-btn left-arrow" title="Previous Page" style="position:absolute;left:10px;top:40px;font-size:2rem;text-decoration:none;">&#8592;</a>
+        <h1 style="display:flex;align-items:center;justify-content:space-between;">
+            <span><span class="icon-profile"></span> My Profile</span>
+            <span style="display:flex;align-items:center;gap:12px;">
+                <a href="/profile/edit" class="purple-btn small-btn" style="margin-left:20px;">Edit</a>
+                <span class="notification-bell" style="margin-left:18px;position:relative;cursor:pointer;">
+                    <span style="font-size:1.7rem;">🔔</span>
+                </span>
+            </span>
+        </h1>
+        <h2>Welcome Back, <span class="profile-username">{{ username }}</span>!</h2>
+        <div class="profile-cards">
+            <section class="profile-card">
+                <div class="card-header"><span class="icon-fav"></span> Favorites</div>
+                <ul class="card-list" id="favorites-list">
+                    {% for fav in favorites %}
+                        <li>
+                            {{ fav }}
+                            <button class="icon-btn" title="Remove" onclick="removeFavorite('{{ fav }}')">&times;</button>
+                        </li>
+                    {% else %}
+                        <li>No favorites yet.</li>
+                    {% endfor %}
+                </ul>
+                <form method="post" action="/profile/favorite/add" style="margin-top:8px;display:flex;gap:6px;">
+                    <input type="text" name="item" placeholder="Add favorite..." required style="flex:1;">
+                    <button class="purple-btn small-btn" type="submit">Add</button>
+                </form>
+            </section>
+            <section class="profile-card">
+                <div class="card-header"><span class="icon-download"></span> Downloads</div>
+                <ul class="card-list">
+                    {% for file, ts in downloads %}
+                        <li>{{ file }} <span class="card-meta">({{ ts }})</span>
+                            <form method="post" action="/profile/download/remove" style="display:inline;">
+                                <input type="hidden" name="filename" value="{{ file }}">
+                                <button class="icon-btn" title="Delete Download">&times;</button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li>No downloads yet.</li>
+                    {% endfor %}
+                </ul>
+            </section>
+            <section class="profile-card">
+                <div class="card-header"><span class="icon-language"></span> Language</div>
+                <div class="card-content">{{ language or 'Not set' }}</div>
+                <form method="post" action="/profile/language" style="margin-top:8px;display:flex;gap:6px;">
+                    <select name="language" style="flex:1;">
+                        <option value="">Select language...</option>
+                        <option value="English">English</option>
+                        <option value="Spanish">Spanish</option>
+                        <option value="French">French</option>
+                        <option value="German">German</option>
+                        <option value="Chinese">Chinese</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <button class="purple-btn small-btn" type="submit">Set</button>
+                </form>
+            </section>
+            <section class="profile-card">
+                <div class="card-header"><span class="icon-history"></span> History</div>
+                <ul class="card-list">
+                    {% for action, ts in history %}
+                        <li>{{ action }} <span class="card-meta">({{ ts }})</span></li>
+                    {% else %}
+                        <li>No history yet.</li>
+                    {% endfor %}
+                </ul>
+            </section>
+        </div>
+        <a href="/logout" class="purple-btn small-btn logout-btn">Logout</a>
+        <!-- Right Arrow for Next Page (placeholder, can be linked to another page) -->
+        <a href="#" class="arrow-btn right-arrow" title="Next Page" style="position:absolute;right:10px;top:40px;font-size:2rem;text-decoration:none;">&#8594;</a>
+    </main>
+
+    <script>
+        async function removeFavorite(item) {
+            if (confirm('Remove this item from favorites?')) {
+                try {
+                    const response = await fetch('/profile/favorite/remove', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: `item=${encodeURIComponent(item)}`
+                    });
+                    
+                    if (response.ok) {
+                        // Remove the item from the DOM
+                        const favoritesList = document.getElementById('favorites-list');
+                        const items = favoritesList.querySelectorAll('li');
+                        items.forEach(li => {
+                            if (li.textContent.includes(item)) {
+                                li.remove();
+                            }
+                        });
+                        
+                        // If no favorites left, show "No favorites yet"
+                        if (favoritesList.children.length === 0) {
+                            favoritesList.innerHTML = '<li>No favorites yet.</li>';
+                        }
+                        
+                        console.log('Favorite removed successfully');
+                    } else {
+                        alert('Failed to remove favorite. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Error removing favorite:', error);
+                    alert('Error removing favorite. Please try again.');
+                }
+            }
+        }
+    </script>
+</body>
+</html> 

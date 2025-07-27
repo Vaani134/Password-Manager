@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Import Passwords</title>
+    <style>
+        body {
+            background-color: #181a1b;
+            color: #e8e6e3;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            padding: 20px;
+        }
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #23272a;
+            padding: 24px;
+            border-radius: 8px;
+        }
+        .test-btn {
+            background: #8e24aa;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 10px 5px;
+        }
+        .test-btn:hover {
+            background: #6d1b7b;
+        }
+        .log {
+            background: #181a1b;
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Test Import Passwords Functionality</h1>
+        
+        <p>This page tests the import passwords functionality without needing to be logged in.</p>
+        
+        <div>
+            <button class="test-btn" onclick="testPasswordsEndpoint()">Test Passwords API</button>
+            <button class="test-btn" onclick="testFoldersEndpoint()">Test Folders API</button>
+            <button class="test-btn" onclick="testFolderUpdateEndpoint()">Test Folder Update API</button>
+        </div>
+        
+        <div class="log" id="log"></div>
+    </div>
+
+    <script>
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        async function testPasswordsEndpoint() {
+            log('Testing /api/passwords endpoint...');
+            try {
+                const response = await fetch('/api/passwords');
+                log(`Response status: ${response.status}`);
+                if (response.status === 401) {
+                    log('✅ Endpoint exists and requires authentication (expected)');
+                } else if (response.status === 200) {
+                    const data = await response.json();
+                    log(`✅ Found ${data.passwords?.length || 0} passwords`);
+                } else {
+                    log(`⚠️ Unexpected status: ${response.status}`);
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`);
+            }
+        }
+
+        async function testFoldersEndpoint() {
+            log('Testing /api/folders endpoint...');
+            try {
+                const response = await fetch('/api/folders');
+                log(`Response status: ${response.status}`);
+                if (response.status === 401) {
+                    log('✅ Endpoint exists and requires authentication (expected)');
+                } else if (response.status === 200) {
+                    const data = await response.json();
+                    log(`✅ Found ${data.folders?.length || 0} folders`);
+                } else {
+                    log(`⚠️ Unexpected status: ${response.status}`);
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`);
+            }
+        }
+
+        async function testFolderUpdateEndpoint() {
+            log('Testing /api/passwords/1/folder endpoint...');
+            try {
+                const response = await fetch('/api/passwords/1/folder', {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({folder_id: 1})
+                });
+                log(`Response status: ${response.status}`);
+                if (response.status === 401) {
+                    log('✅ Endpoint exists and requires authentication (expected)');
+                } else if (response.status === 404) {
+                    log('✅ Endpoint exists but password not found (expected if no passwords exist)');
+                } else if (response.status === 200) {
+                    log('✅ Endpoint exists and returned success');
+                } else {
+                    log(`⚠️ Unexpected status: ${response.status}`);
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`);
+            }
+        }
+
+        // Auto-test on page load
+        window.onload = function() {
+            log('Page loaded. Ready to test import passwords functionality.');
+            log('Click the buttons above to test individual endpoints.');
+        };
+    </script>
+</body>
+</html> 
