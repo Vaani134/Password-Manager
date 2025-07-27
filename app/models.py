@@ -48,6 +48,21 @@ class User_passwords(db.Model):
     username=db.Column(db.String(100),nullable=False )
     notes=db.Column(db.String(500),nullable=False )
     create_time = db.Column(db.DateTime, default=datetime.utcnow)
+    trashed = db.Column(db.Boolean, default=False)
+    
+    def encrypt_password(self,plain_password,master_password,user_salt):
+        """Encrypt password using master password and user salt"""
+        # Convert salt from string to bytes
+        salt_bytes=base64.b64decode(user_salt)
+        # Derive encryption key from master password
+        key=derive_key(master_password,salt_bytes)
+        self.encrypted_password=encrypt_data(key,plain_password)
+
+    def decrypt_password(self,master_password,user_salt):
+        """Decrypt password using master password and user salt"""
+        salt_bytes=base64.b64decode(user_salt)        
+        key=derive_key(master_password,salt_bytes)
+        return decrypt_data(key, self.encrypted_password)
 
 class SecuredNote(db.Model):
     """Secured notes model with encryption."""
@@ -83,21 +98,4 @@ class CreditCard(db.Model):
     trashed = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    update_time = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    trashed = db.Column(db.Boolean, default=False)
-    
-    def encrypt_password(self,plain_password,master_password,user_salt):
-        """Encrypt password using master passwrd and user salt"""
-        # Convert salt from string to bytes
-        salt_bytes=base64.b64decode(user_salt)
-        # Derive encryption key from master passwd
-        key=derive_key(master_password,salt_bytes)
-        self.encrypted_password=encrypt_data(key,plain_password)
-
-    def decrypt_password(self,master_password,user_salt):
-        """"Decrupt password using m_pass & user salr"""
-        salt_bytes=base64.b64decode(user_salt)        
-        key=derive_key(master_password,salt_bytes)
-
-        return decrypt_data(key, self.encrypted_password)
 

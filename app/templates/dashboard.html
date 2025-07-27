@@ -185,7 +185,7 @@
             
             <div id="vault-notes" class="vault-subcategory">
                 <h1>📝 Secured Notes</h1>
-                <form id="add-note-form" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+                <form id="notes-form" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
                     <input type="text" id="new-note-title" placeholder="Note title..." required style="flex:1;min-width:150px;">
                     <input type="text" id="new-note-content" placeholder="Note content..." required style="flex:2;min-width:200px;">
                     <button class="purple-btn small-btn" type="submit">Add Note</button>
@@ -195,7 +195,7 @@
             
             <div id="vault-creditcards" class="vault-subcategory">
                 <h1>💳 Credit Cards</h1>
-                <form id="add-card-form" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+                <form id="cards-form" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
                     <input type="text" id="card-name" placeholder="Card Name" required style="flex:1;min-width:120px;">
                     <input type="text" id="card-number" placeholder="Card Number" required style="flex:2;min-width:120px;">
                     <input type="text" id="card-holder" placeholder="Cardholder Name" required style="flex:2;min-width:120px;">
@@ -429,6 +429,30 @@
         if (sub === 'passwords') {
             console.log('[NAV] Showing passwords section, rendering passwords...');
             renderPasswordsByFolder();
+        }
+        if (sub === 'notes') {
+            console.log('[NAV] Showing notes section, rendering notes...');
+            // Ensure the section is visible first
+            setTimeout(() => {
+                if (typeof renderNotes === 'function') {
+                    console.log('[NAV] Calling renderNotes function...');
+                    renderNotes();
+                } else {
+                    console.error('[NAV] renderNotes function not found!');
+                }
+            }, 100);
+        }
+        if (sub === 'creditcards') {
+            console.log('[NAV] Showing credit cards section, rendering cards...');
+            // Ensure the section is visible first
+            setTimeout(() => {
+                if (typeof renderCards === 'function') {
+                    console.log('[NAV] Calling renderCards function...');
+                    renderCards();
+                } else {
+                    console.error('[NAV] renderCards function not found!');
+                }
+            }, 100);
         }
     }
     
@@ -1272,15 +1296,25 @@
 
         // Initialize dashboard on page load
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 [INIT] Dashboard DOM loaded, initializing...');
             showSection('vault');
             searchPasswords();
             
             // Load secured notes and credit cards
+            console.log('🚀 [INIT] Checking for notes-container...');
             if (document.getElementById('notes-container')) {
+                console.log('🚀 [INIT] Notes container found, calling renderNotes...');
                 renderNotes();
+            } else {
+                console.log('🚀 [INIT] Notes container NOT found');
             }
+            
+            console.log('🚀 [INIT] Checking for cards-container...');
             if (document.getElementById('cards-container')) {
+                console.log('🚀 [INIT] Cards container found, calling renderCards...');
                 renderCards();
+            } else {
+                console.log('🚀 [INIT] Cards container NOT found');
             }
             
             // Add form event listeners
@@ -1691,16 +1725,95 @@
             await renderFoldersPasswords();
         })();
 
+        // === DIAGNOSTIC FUNCTIONS ===
+        window.diagnoseDashboard = function() {
+            console.log('🔍 === DASHBOARD DIAGNOSTIC ===');
+            
+            // Check if containers exist
+            const notesContainer = document.getElementById('notes-container');
+            const cardsContainer = document.getElementById('cards-container');
+            console.log('📝 Notes container exists:', !!notesContainer);
+            console.log('💳 Cards container exists:', !!cardsContainer);
+            
+            // Check if sections are visible
+            const notesSection = document.getElementById('vault-notes');
+            const cardsSection = document.getElementById('vault-creditcards');
+            if (notesSection) {
+                console.log('📝 Notes section display:', notesSection.style.display);
+                console.log('📝 Notes section classes:', notesSection.className);
+            }
+            if (cardsSection) {
+                console.log('💳 Cards section display:', cardsSection.style.display);
+                console.log('💳 Cards section classes:', cardsSection.className);
+            }
+            
+            // Check if functions exist
+            console.log('📝 renderNotes function exists:', typeof renderNotes === 'function');
+            console.log('💳 renderCards function exists:', typeof renderCards === 'function');
+            
+            // Test API calls directly
+            console.log('🌐 Testing API calls...');
+            fetch('/api/notes').then(r => r.json()).then(data => {
+                console.log('📝 Notes API response:', data);
+            }).catch(err => console.error('📝 Notes API error:', err));
+            
+            fetch('/api/cards').then(r => r.json()).then(data => {
+                console.log('💳 Cards API response:', data);
+            }).catch(err => console.error('💳 Cards API error:', err));
+            
+            console.log('🔍 === END DIAGNOSTIC ===');
+        };
+        
+        // === FORCE RENDER FUNCTION ===
+        window.forceRenderNotesAndCards = function() {
+            console.log('🔄 Force rendering notes and cards...');
+            
+            // Show notes section and render
+            console.log('🔄 Switching to notes section...');
+            showVaultSubcategory('notes');
+            setTimeout(() => {
+                if (typeof renderNotes === 'function') {
+                    renderNotes();
+                    console.log('📝 Notes rendered');
+                } else {
+                    console.error('📝 renderNotes function not found');
+                }
+            }, 500);
+            
+            // Show cards section and render after 2 seconds
+            setTimeout(() => {
+                console.log('🔄 Switching to cards section...');
+                showVaultSubcategory('creditcards');
+                setTimeout(() => {
+                    if (typeof renderCards === 'function') {
+                        renderCards();
+                        console.log('💳 Cards rendered');
+                    } else {
+                        console.error('💳 renderCards function not found');
+                    }
+                }, 500);
+            }, 2000);
+        };
+
         // === SECURED NOTES FUNCTIONALITY ===
         async function renderNotes() {
+            console.log('🗒️ [DEBUG] renderNotes() called');
             try {
+                console.log('🗒️ [DEBUG] Making API call to /api/notes');
                 const response = await fetch('/api/notes');
+                console.log('🗒️ [DEBUG] API response status:', response.status);
                 const data = await response.json();
+                console.log('🗒️ [DEBUG] API response data:', data);
                 
                 const container = document.getElementById('notes-container');
+                if (!container) {
+                    console.error('🗒️ [ERROR] notes-container element not found');
+                    return;
+                }
                 container.innerHTML = '';
                 
                 if (data.notes && data.notes.length > 0) {
+                    console.log('🗒️ [DEBUG] Rendering', data.notes.length, 'notes');
                     data.notes.forEach(note => {
                         const noteCard = document.createElement('div');
                         noteCard.className = 'profile-card';
@@ -1719,11 +1832,15 @@
                         container.appendChild(noteCard);
                     });
                 } else {
-                    container.innerHTML = '<div style="color:#bdbdbd;text-align:center;padding:20px;">No notes found</div>';
+                    console.log('🗒️ [DEBUG] No notes found, showing empty message');
+                    container.innerHTML = '<div style="color:#bdbdbd;text-align:center;padding:20px;">No notes found. Add your first note using the form above!</div>';
                 }
             } catch (error) {
-                console.error('Error loading notes:', error);
-                document.getElementById('notes-container').innerHTML = '<div style="color:#f44336;text-align:center;padding:20px;">Error loading notes</div>';
+                console.error('🗒️ [ERROR] Error loading notes:', error);
+                const container = document.getElementById('notes-container');
+                if (container) {
+                    container.innerHTML = '<div style="color:#f44336;text-align:center;padding:20px;">Error loading notes: ' + error.message + '</div>';
+                }
             }
         }
 
@@ -1809,14 +1926,23 @@
 
         // === CREDIT CARDS FUNCTIONALITY ===
         async function renderCards() {
+            console.log('💳 [DEBUG] renderCards() called');
             try {
+                console.log('💳 [DEBUG] Making API call to /api/cards');
                 const response = await fetch('/api/cards');
+                console.log('💳 [DEBUG] API response status:', response.status);
                 const data = await response.json();
+                console.log('💳 [DEBUG] API response data:', data);
                 
                 const container = document.getElementById('cards-container');
+                if (!container) {
+                    console.error('💳 [ERROR] cards-container element not found');
+                    return;
+                }
                 container.innerHTML = '';
                 
                 if (data.cards && data.cards.length > 0) {
+                    console.log('💳 [DEBUG] Rendering', data.cards.length, 'cards');
                     data.cards.forEach(card => {
                         const maskedNumber = '**** **** **** ' + card.last_four_digits;
                         const cardCard = document.createElement('div');
@@ -1846,11 +1972,15 @@
                         container.appendChild(cardCard);
                     });
                 } else {
-                    container.innerHTML = '<div style="color:#bdbdbd;text-align:center;padding:20px;">No credit cards found</div>';
+                    console.log('💳 [DEBUG] No cards found, showing empty message');
+                    container.innerHTML = '<div style="color:#bdbdbd;text-align:center;padding:20px;">No credit cards found. Add your first card using the form above!</div>';
                 }
             } catch (error) {
-                console.error('Error loading cards:', error);
-                document.getElementById('cards-container').innerHTML = '<div style="color:#f44336;text-align:center;padding:20px;">Error loading cards</div>';
+                console.error('💳 [ERROR] Error loading cards:', error);
+                const container = document.getElementById('cards-container');
+                if (container) {
+                    container.innerHTML = '<div style="color:#f44336;text-align:center;padding:20px;">Error loading cards: ' + error.message + '</div>';
+                }
             }
         }
 

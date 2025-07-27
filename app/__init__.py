@@ -113,8 +113,6 @@ def create_app():
                 flash('Invalid username or password', 'error')
         return render_template('login.html')
 
-
-
     @app.route('/logout')
     def logout():
         username = session.get('username', 'Unknown')
@@ -664,7 +662,13 @@ def create_app():
     @app.route('/api/notes', methods=['GET'])
     @login_required
     def get_notes():
+        print(f"[NOTES API] GET request received")
+        print(f"[NOTES API] Session data: {dict(session)}")
+        from flask_login import current_user
+        print(f"[NOTES API] Current user: {current_user}")
+        print(f"[NOTES API] Is authenticated: {current_user.is_authenticated}")
         username = session['username']
+        print(f"[NOTES API] Username from session: {username}")
         try:
             with sqlite3.connect('instance/password_manager.db') as conn:
                 # Create table if it doesn't exist
@@ -782,6 +786,13 @@ def create_app():
     @app.route('/api/cards', methods=['GET'])
     @login_required
     def get_cards():
+        print(f"[CARDS API] GET request received")
+        print(f"[CARDS API] Session data: {dict(session)}")
+        from flask_login import current_user
+        print(f"[CARDS API] Current user: {current_user}")
+        print(f"[CARDS API] Is authenticated: {current_user.is_authenticated}")
+        username = session['username']
+        print(f"[CARDS API] Username from session: {username}")
         username = session['username']
         try:
             with sqlite3.connect('instance/password_manager.db') as conn:
