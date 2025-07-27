@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Password Manager</title>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
@@ -20,13 +21,18 @@
             {% endwith %}
             <form method="post" action="/login" class="auth-form">
                 <label for="username">Username:</label>
-                <input type="text" id="username" name="username" required>
+                <input type="text" id="username" name="username" required autocomplete="username" placeholder="Enter your username">
+                
                 <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required>
+                <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Enter your password">
+                
                 <button type="submit" class="purple-btn">Log In</button>
             </form>
 
-            <p class="auth-alt">Don't have an account? <a href="/signup" class="purple-btn small-btn">Sign Up</a></p>
+            <div class="auth-alt">
+                <span>Don't have an account?</span>
+                <a href="/signup" class="purple-btn small-btn">Sign Up</a>
+            </div>
         </section>
     </main>
 </body>

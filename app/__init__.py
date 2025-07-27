@@ -34,7 +34,7 @@ def create_app():
     
     db.init_app(app)
     login_manager.init_app(app)
-    login_manager.login_view = 'login_page'  # Fix: set to the correct endpoint
+    login_manager.login_view = 'login_page'
     
     @login_manager.unauthorized_handler
     def unauthorized():
@@ -95,6 +95,11 @@ def create_app():
         if request.method == 'POST':
             username = request.form.get('username')
             password = request.form.get('password')
+            
+            if not username or not password:
+                flash('Please enter both username and password', 'error')
+                return render_template('login.html')
+                
             print(f"[LOGIN] Attempting login for user: {username}")
             key = verify_user(username, password)
             if key:
@@ -654,6 +659,264 @@ def create_app():
             'reused': reused_count,
             'results': analysis_results
         })
+
+    # === SECURED NOTES API ENDPOINTS ===
+    @app.route('/api/notes', methods=['GET'])
+    @login_required
+    def get_notes():
+        username = session['username']
+        try:
+            with sqlite3.connect('instance/password_manager.db') as conn:
+                # Create table if it doesn't exist
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS secured_notes (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        username TEXT NOT NULL,
+                        title TEXT NOT NULL,
+                        encrypted_content TEXT NOT NULL,
+                        trashed INTEGER DEFAULT 0,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                
+                rows = conn.execute("""
+                    SELECT id, title, encrypted_content, created_at
+                    FROM secured_notes WHERE username = ? AND trashed = 0
+                    ORDER BY created_at DESC
+                """, (username,)).fetchall()
+                
+            notes = []
+            key = derive_key(username, b'static_salt')
+            from app.services.encryption import decrypt_data
+            
+            for row in rows:
+                try:
+                    decrypted_content = decrypt_data(key, row[2])
+                    notes.append({
+                        'id': row[0],
+                        'title': row[1],
+                        'content': decrypted_content,
+                        'created_at': row[3]
+                    })
+                except Exception as e:
+                    print(f"Error decrypting note {row[0]}: {e}")
+                    continue
+                    
+            return jsonify({'notes': notes})
+        except Exception as e:
+            print(f"Error fetching notes: {e}")
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/notes', methods=['POST'])
+    @login_required
+    def add_note():
+        username = session['username']
+        data = request.json
+        
+        if not data or not data.get('title') or not data.get('content'):
+            return jsonify({'error': 'Title and content are required'}), 400
+            
+        title = data.get('title').strip()
+        content = data.get('content').strip()
+        
+        try:
+            key = derive_key(username, b'static_salt')
+            encrypted_content = encrypt_data(key, content)
+            
+            with sqlite3.connect('instance/password_manager.db') as conn:
+                cursor = conn.execute("""
+                    INSERT INTO secured_notes (username, title, encrypted_content)
+                    VALUES (?, ?, ?)
+                """, (username, title, encrypted_content))
+                note_id = cursor.lastrowid
+                
+            return jsonify({'success': True, 'note_id': note_id})
+        except Exception as e:
+            print(f"Error adding note: {e}")
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/notes/<int:note_id>', methods=['PUT'])
+    @login_required
+    def edit_note(note_id):
+        username = session['username']
+        data = request.json
+        
+        if not data or not data.get('title') or not data.get('content'):
+            return jsonify({'error': 'Title and content are required'}), 400
+            
+        title = data.get('title').strip()
+        content = data.get('content').strip()
+        
+        try:
+            key = derive_key(username, b'static_salt')
+            encrypted_content = encrypt_data(key, content)
+            
+            with sqlite3.connect('instance/password_manager.db') as conn:
+                conn.execute("""
+                    UPDATE secured_notes 
+                    SET title=?, encrypted_content=?, updated_at=CURRENT_TIMESTAMP
+                    WHERE id=? AND username=? AND trashed=0
+                """, (title, encrypted_content, note_id, username))
+                
+            return jsonify({'success': True})
+        except Exception as e:
+            print(f"Error editing note: {e}")
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/notes/<int:note_id>', methods=['DELETE'])
+    @login_required
+    def delete_note(note_id):
+        username = session['username']
+        try:
+            with sqlite3.connect('instance/password_manager.db') as conn:
+                conn.execute("""
+                    UPDATE secured_notes SET trashed=1 
+                    WHERE id=? AND username=?
+                """, (note_id, username))
+            return jsonify({'success': True})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    # === CREDIT CARDS API ENDPOINTS ===
+    @app.route('/api/cards', methods=['GET'])
+    @login_required
+    def get_cards():
+        username = session['username']
+        try:
+            with sqlite3.connect('instance/password_manager.db') as conn:
+                # Create table if it doesn't exist
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS credit_cards (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        username TEXT NOT NULL,
+                        card_name TEXT NOT NULL,
+                        encrypted_card_number TEXT NOT NULL,
+                        encrypted_cardholder_name TEXT NOT NULL,
+                        encrypted_expiry_date TEXT NOT NULL,
+                        encrypted_cvc TEXT NOT NULL,
+                        encrypted_notes TEXT,
+                        card_type TEXT,
+                        last_four_digits TEXT NOT NULL,
+                        trashed INTEGER DEFAULT 0,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                
+                rows = conn.execute("""
+                    SELECT id, card_name, encrypted_card_number, encrypted_cardholder_name, 
+                           encrypted_expiry_date, encrypted_cvc, encrypted_notes, 
+                           card_type, last_four_digits, created_at
+                    FROM credit_cards WHERE username = ? AND trashed = 0
+                    ORDER BY created_at DESC
+                """, (username,)).fetchall()
+                
+            cards = []
+            key = derive_key(username, b'static_salt')
+            from app.services.encryption import decrypt_data
+            
+            for row in rows:
+                try:
+                    decrypted_number = decrypt_data(key, row[2])
+                    decrypted_cardholder = decrypt_data(key, row[3])
+                    decrypted_expiry = decrypt_data(key, row[4])
+                    decrypted_cvc = decrypt_data(key, row[5])
+                    decrypted_notes = decrypt_data(key, row[6]) if row[6] else ''
+                    
+                    cards.append({
+                        'id': row[0],
+                        'card_name': row[1],
+                        'card_number': decrypted_number,
+                        'cardholder_name': decrypted_cardholder,
+                        'expiry_date': decrypted_expiry,
+                        'cvc': decrypted_cvc,
+                        'notes': decrypted_notes,
+                        'card_type': row[7],
+                        'last_four_digits': row[8],
+                        'created_at': row[9]
+                    })
+                except Exception as e:
+                    print(f"Error decrypting card {row[0]}: {e}")
+                    continue
+                    
+            return jsonify({'cards': cards})
+        except Exception as e:
+            print(f"Error fetching cards: {e}")
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/cards', methods=['POST'])
+    @login_required
+    def add_card():
+        username = session['username']
+        data = request.json
+        
+        required_fields = ['card_name', 'card_number', 'cardholder_name', 'expiry_date', 'cvc']
+        for field in required_fields:
+            if not data or not data.get(field):
+                return jsonify({'error': f'{field} is required'}), 400
+                
+        try:
+            card_name = data.get('card_name').strip()
+            card_number = data.get('card_number').strip().replace(' ', '')
+            cardholder_name = data.get('cardholder_name').strip()
+            expiry_date = data.get('expiry_date').strip()
+            cvc = data.get('cvc').strip()
+            notes = data.get('notes', '').strip()
+            
+            # Validate card number (basic validation)
+            if not card_number.isdigit() or len(card_number) < 13 or len(card_number) > 19:
+                return jsonify({'error': 'Invalid card number'}), 400
+                
+            # Determine card type
+            card_type = 'Unknown'
+            if card_number.startswith(('4',)):
+                card_type = 'Visa'
+            elif card_number.startswith(('5', '2')):
+                card_type = 'MasterCard'
+            elif card_number.startswith(('3',)):
+                card_type = 'American Express'
+                
+            last_four = card_number[-4:]
+            
+            # Encrypt sensitive data
+            key = derive_key(username, b'static_salt')
+            encrypted_number = encrypt_data(key, card_number)
+            encrypted_cardholder = encrypt_data(key, cardholder_name)
+            encrypted_expiry = encrypt_data(key, expiry_date)
+            encrypted_cvc = encrypt_data(key, cvc)
+            encrypted_notes = encrypt_data(key, notes) if notes else ''
+            
+            with sqlite3.connect('instance/password_manager.db') as conn:
+                cursor = conn.execute("""
+                    INSERT INTO credit_cards 
+                    (username, card_name, encrypted_card_number, encrypted_cardholder_name,
+                     encrypted_expiry_date, encrypted_cvc, encrypted_notes, 
+                     card_type, last_four_digits)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (username, card_name, encrypted_number, encrypted_cardholder,
+                      encrypted_expiry, encrypted_cvc, encrypted_notes, 
+                      card_type, last_four))
+                card_id = cursor.lastrowid
+                
+            return jsonify({'success': True, 'card_id': card_id})
+        except Exception as e:
+            print(f"Error adding card: {e}")
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/cards/<int:card_id>', methods=['DELETE'])
+    @login_required  
+    def delete_card(card_id):
+        username = session['username']
+        try:
+            with sqlite3.connect('instance/password_manager.db') as conn:
+                conn.execute("""
+                    UPDATE credit_cards SET trashed=1 
+                    WHERE id=? AND username=?
+                """, (card_id, username))
+            return jsonify({'success': True})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
 
  
     # with app.app_context():

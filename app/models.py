@@ -48,6 +48,41 @@ class User_passwords(db.Model):
     username=db.Column(db.String(100),nullable=False )
     notes=db.Column(db.String(500),nullable=False )
     create_time = db.Column(db.DateTime, default=datetime.utcnow)
+
+class SecuredNote(db.Model):
+    """Secured notes model with encryption."""
+    __tablename__ = 'secured_notes'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    title = db.Column(db.String(255), nullable=False)
+    encrypted_content = db.Column(db.Text, nullable=False)
+    
+    trashed = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class CreditCard(db.Model):
+    """Credit cards model with encryption."""
+    __tablename__ = 'credit_cards'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    card_name = db.Column(db.String(255), nullable=False)  # User-defined name for the card
+    encrypted_card_number = db.Column(db.Text, nullable=False)
+    encrypted_cardholder_name = db.Column(db.Text, nullable=False)
+    encrypted_expiry_date = db.Column(db.Text, nullable=False)
+    encrypted_cvc = db.Column(db.Text, nullable=False)
+    encrypted_notes = db.Column(db.Text, nullable=True)
+    
+    card_type = db.Column(db.String(50), nullable=True)  # Visa, MasterCard, etc.
+    last_four_digits = db.Column(db.String(4), nullable=False)  # For display purposes
+    
+    trashed = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     update_time = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     trashed = db.Column(db.Boolean, default=False)
     
