@@ -10,6 +10,7 @@ A secure, modern password manager built with Flask, supporting encrypted passwor
 - User profile management
 - Trash and restore deleted passwords
 - Download logs and favorites
+- Delete all passwords functionality with confirmation modal
 - RESTful API endpoints for integration
 
 ## Requirements
@@ -34,8 +35,7 @@ pip install -r requirements.txt
    ```bash
    python run.py
    ```
-   The app will start on Local access: http://127.0.0.1:5000 or http://localhost:5000
-Network access: http://192.168.29.240:5000 
+   The app will start on http://127.0.0.1:5000 by default.
 
 ## Project Structure
 - `app/` - Main application package
@@ -62,6 +62,7 @@ Network access: http://192.168.29.240:5000
 - `POST /api/passwords` - Add a new password
 - `PUT /api/passwords/<password_id>` - Edit a password
 - `DELETE /api/passwords/<password_id>` - Delete a password
+- `POST /api/passwords/delete_all` - Delete all passwords for the current user
 - `GET /api/passwords/grouped` - List passwords grouped by folder
 - `PUT /api/passwords/<password_id>/folder` - Move password to folder
 - `PUT /api/passwords/<password_id>/trash` - Move password to trash
