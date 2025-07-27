@@ -34,7 +34,8 @@ pip install -r requirements.txt
    ```bash
    python run.py
    ```
-   The app will start on http://127.0.0.1:5000 by default.
+   The app will start on Local access: http://127.0.0.1:5000 or http://localhost:5000
+Network access: http://192.168.29.240:5000 
 
 ## Project Structure
 - `app/` - Main application package
